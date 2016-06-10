@@ -1,0 +1,63 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Battleships</title>
+    <meta name="description" content="The classic battleships game">
+    <meta name="author" content="mati">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+
+
+
+<div id="titleDiv" class="container">
+    <div id="title" class="page-header center-block"><p class="text-center h1">Battleships Game</p></div>
+</div>
+
+<div class="jumbotron">
+
+<div id="startDiv" class="container">
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <button id="startButton" class="btn-warning btn-block btn-lg text-center">Start Game</button>
+        </div>
+        <div class="col-md-2"></div>
+
+    </div>
+</div>
+
+<div id="gameDiv" class="hidden container">
+    <div class="container">
+        <div id="canvasDiv row">
+            <div class="col-md-12">
+                <canvas class="center-block" width="600px", height="400px" style="background-color: #255625"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div id="info" class="row">
+            <div id=ships" class="col-md-8 list-inline">
+                <div style="display:inline-block;width:100px;">some content</div>
+                <div class="fifth ship">=====</div>
+                <div class="fourth ship">====</div>
+                <div class="third ship">===</div>
+                <div class="second ship">==</div>
+                <div class="first ship">=</div>
+            </div>
+            <div class="col-md-4"><p class="h3">Put your ship on board</p></div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script src="js/jquery.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

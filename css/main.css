@@ -1,0 +1,14 @@
+.hidden {
+    display: none;
+}
+
+#info {
+    padding-top: 10px;
+}
+
+.ship {
+    width: 80px;
+    height: 30px;
+    border: 1px solid black;
+    display: inline-block;
+}

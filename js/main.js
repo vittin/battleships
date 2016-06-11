@@ -9,6 +9,7 @@ var Buttons = {
         $(".ship").on("click", function() {
             var size = $(this).attr("data-size");
             console.log(size);
+            Board.setCurrentShip(size, true);
         })
     }
 };
@@ -38,7 +39,6 @@ var Board = {
         var bigLineSize = 10;
         var smallLineSize = 1;
         var fieldSize = this.fieldSize;
-        console.log(height);
 
         //line between two boards;
         ctx.moveTo(width/2, 0);
@@ -104,14 +104,18 @@ var Board = {
     },
 
     clickHandler: function() {
+
         var getMousePos = this.getMousePosition;
         var fieldSize = this.fieldSize;
         var mode = this.mode;
+
         $("#gameCanvas").on("click", function(e){
             var mousePosition = getMousePos(e);
             var x = Math.floor(mousePosition.x/fieldSize);
             var y = Math.floor(mousePosition.y/fieldSize);
-
+            if (x > Board.width / 2){
+                return;
+            }
             if (mode == 0){
                 if (Board.currentShip.size !== null){
                     Ajax.putShip(x,y, Board.currentShip.size, Board.currentShip.horizontally);
@@ -144,22 +148,22 @@ Ajax = {
     },
 
     putShip: function(x, y, size, horizontally) {
+        console.log(3432);
         $.ajax({
             url: "http://localhost:8080/placeShip",
             type: "POST",
-            data: {x: x, y: y, size: size, horizontally: horizontally},
-            dataType: "jsonx",
-
-            done: function( data ){
-                if (data){
+            data: {x: x, y: y, size: size, horizontally: horizontally}
+        })
+            .done(function( data ) {
+                console.log("hi" + data);
+                if (data) {
                     Board.drawShip(x, y, size, horizontally);
                 }
-            },
+            })
 
-            fail: function( response ) {
+            .fail(function( response ) {
                 console.log("Error " + response.status, response.statusText);
-            }
-        })
+            })
     },
 
     shoot: function(x, y) {

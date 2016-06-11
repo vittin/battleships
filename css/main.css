@@ -2,13 +2,14 @@
     display: none;
 }
 
+#gameCanvas {
+    width: 1090px;
+    height: 540px;
+    border: 2px solid black;
+    background-color: rgba(75, 71, 168, 0.50);
+}
+
 #info {
     padding-top: 10px;
 }
 
-.ship {
-    width: 80px;
-    height: 30px;
-    border: 1px solid black;
-    display: inline-block;
-}

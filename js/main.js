@@ -4,13 +4,21 @@ $("#startButton").on("click", function(){
     Ajax.init();
 });
 
-var Buttons = {
+var Events = {
     init: function() {
+        this.rotate();
         $(".ship").on("click", function() {
             var size = $(this).attr("data-size");
-            console.log(size);
             Board.setCurrentShip(size, true);
         })
+    },
+
+    rotate: function() {
+        $("#gameCanvas").on("contextmenu", function(e){
+                Board.currentShip.horizontally = !Board.currentShip.horizontally;
+                return false;
+            }
+        )
     }
 };
 
@@ -132,14 +140,13 @@ Ajax = {
 
     init: function() {
         $.get("http://localhost:8080/initGame")
-            .done(function( data ) {
-                //alert( "Data Loaded: " + data );
+            .done(function() {
                 $("#startDiv").addClass("hidden");
                 $("#gameDiv").removeClass("hidden");
                 Board.init();
                 Board.drawStatic();
                 Board.clickHandler();
-                Buttons.init();
+                Events.init();
 
             })
             .fail(function(response){
@@ -148,20 +155,33 @@ Ajax = {
     },
 
     putShip: function(x, y, size, horizontally) {
-        console.log(3432);
         $.ajax({
             url: "http://localhost:8080/placeShip",
             type: "POST",
-            data: {x: x, y: y, size: size, horizontally: horizontally}
+            data: {x: x, y: y, size: size, horizontally: horizontally},
+            dataType: "json"
         })
             .done(function( data ) {
-                console.log("hi" + data);
-                if (data) {
+
+                if (JSON.parse(data.response)) {
                     Board.drawShip(x, y, size, horizontally);
+                    if(data.remaining < 1){
+                        Board.setCurrentShip(null, true);
+                        var btn = $(".size"+size);
+                        btn.attr("disabled", "disabled");
+                        btn.addClass("btn-success");
+                        btn.removeClass("btn-info");
+                        btn.removeClass("ship");
+                    }
+
+                    if (JSON.parse(data.complete)) {
+                        $("#infoBox").text("Game started.");
+                    }
                 }
             })
 
             .fail(function( response ) {
+                console.log(response);
                 console.log("Error " + response.status, response.statusText);
             })
     },

@@ -29,6 +29,7 @@ var Board = {
     ctx: null,
     currentShip: {size: null, horizontally: true},
     fieldSize: 30,
+    bigLineSize: 10,
     mode: 0,
 
     init: function(){
@@ -44,9 +45,11 @@ var Board = {
         var ctx = this.ctx;
         var width = this.width;
         var height = this.height;
-        var bigLineSize = 10;
+        var bigLineSize = this.bigLineSize;
         var smallLineSize = 1;
         var fieldSize = this.fieldSize;
+
+        ctx.beginPath();
 
         //line between two boards;
         ctx.moveTo(width/2, 0);
@@ -81,6 +84,9 @@ var Board = {
         }
         ctx.lineWidth = smallLineSize;
         ctx.stroke();
+
+        ctx.closePath();
+
     },
 
     setCurrentShip: function(shipSize, horizontally){
@@ -103,7 +109,58 @@ var Board = {
         }
     },
 
+    getXYtoDraw: function(x, y, isPlayerMove){
+
+        var fieldSize = this.fieldSize;
+
+        if (isPlayerMove){
+            x = x*fieldSize + this.bigLineSize;
+            y *= fieldSize;
+        } else {
+            x = x*fieldSize;
+            y *= fieldSize;
+        }
+        return [x, y];
+    },
+
+    drawShoot: function(x, y, isPlayerMove){
+
+        var ctx = this.ctx;
+        var fieldSize = this.fieldSize;
+        var coordinatesToDraw = this.getXYtoDraw(x,y,isPlayerMove);
+        x = coordinatesToDraw[0];
+        y = coordinatesToDraw[1];
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x+fieldSize, y+fieldSize);
+        ctx.moveTo(x, y+fieldSize);
+        ctx.lineTo(x+fieldSize, y);
+        ctx.strokeStyle = "#ff0000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.closePath();
+
+
+    },
+
+    drawHit: function(x, y, isPlayerMove){
+
+        var ctx = this.ctx;
+        var fieldSize = this.fieldSize;
+        var coordinatesToDraw = this.getXYtoDraw(x,y,isPlayerMove);
+        x = coordinatesToDraw[0];
+        y = coordinatesToDraw[1];
+
+        ctx.clearRect(x,y,fieldSize, fieldSize);
+        ctx.fillStyle = "#ff0000";
+        ctx.fillRect(x,y,fieldSize, fieldSize);
+
+    },
+
+
     getMousePosition: function(event) {
+
         var rect = Board.canvas.getBoundingClientRect();
         return {
             x: event.clientX - rect.left,
@@ -115,21 +172,30 @@ var Board = {
 
         var getMousePos = this.getMousePosition;
         var fieldSize = this.fieldSize;
-        var mode = this.mode;
-
+        var width = this.width;
+        var lineWidth = Board.bigLineSize;
+        var that = this;
         $("#gameCanvas").on("click", function(e){
+
+            var mode = that.mode;
             var mousePosition = getMousePos(e);
             var x = Math.floor(mousePosition.x/fieldSize);
             var y = Math.floor(mousePosition.y/fieldSize);
-            if (x > Board.width / 2){
-                return;
+            var condition = (x < width / (2*fieldSize) - 1);
+            if(mode == 1){
+                x = Math.floor((mousePosition.x - lineWidth) / fieldSize);
+                condition = (x > width / (2*fieldSize) - 1);
             }
-            if (mode == 0){
-                if (Board.currentShip.size !== null){
-                    Ajax.putShip(x,y, Board.currentShip.size, Board.currentShip.horizontally);
+
+
+            if (condition){
+                if (mode == 0){
+                    if (Board.currentShip.size !== null){
+                        Ajax.putShip(x,y, Board.currentShip.size, Board.currentShip.horizontally);
+                    }
+                } else {
+                    Ajax.shoot(x,y);
                 }
-            } else {
-                Ajax.shoot(x,y);
             }
         });
 
@@ -137,9 +203,9 @@ var Board = {
 };
 
 Ajax = {
-
+    url: "http://localhost:8080/api/",
     init: function() {
-        $.get("http://localhost:8080/initGame")
+        $.get(this.url + "initGame")
             .done(function() {
                 $("#startDiv").addClass("hidden");
                 $("#gameDiv").removeClass("hidden");
@@ -156,7 +222,7 @@ Ajax = {
 
     putShip: function(x, y, size, horizontally) {
         $.ajax({
-            url: "http://localhost:8080/placeShip",
+            url: this.url + "placeShip",
             type: "POST",
             data: {x: x, y: y, size: size, horizontally: horizontally},
             dataType: "json"
@@ -176,22 +242,79 @@ Ajax = {
 
                     if (JSON.parse(data.complete)) {
                         $("#infoBox").text("Game started.");
+                        Board.mode = 1;
                     }
                 }
             })
 
             .fail(function( response ) {
-                console.log(response);
                 console.log("Error " + response.status, response.statusText);
             })
     },
 
     shoot: function(x, y) {
-        //todo
+        $.ajax({
+            url: this.url + "shoot",
+            data: {x: x, y: y},
+            method: "POST"
+        })
+            .done(function ( data ) {
+                $("#infoBox").text("You turn");
+                if (!JSON.parse(data.success)){return;}
+
+                if (JSON.parse(data.hit)) {
+                    Board.drawHit(x,y, true);
+                    if(JSON.parse(data.dead)){
+                        //todo: draw dead ship;
+                        $("#infoBox").text("BUMMM!");
+
+                        Ajax.isEndGame();
+                    }
+
+                } else {
+                    console.log(x,y);
+                    Board.drawShoot(x, y, true);
+                    Ajax.getOpponentShot();
+                }
+            })
+
+            .fail(function (response) {
+                console.log("Error " + response.status, response.statusText);
+            })
+    },
+
+    getOpponentShot: function() {
+        $.get(this.url + "getShoot")
+            .done(function( response ){
+                if (JSON.parse(response.hit)){
+                    Board.drawHit(response.x, response.y, false);
+                    this.getOpponentShot();
+                } else {
+                    Board.drawShoot(response.x, response.y, false);
+                }
+
+            })
+
+            .fail(function( response ){
+                console.log("Error " + response.status, response.statusText);
+            })
+    },
+
+    isEndGame: function() {
+        $.get(this.url + "endGame")
+            .done(function( response ) {
+                if (JSON.parse(response.isEnd)) {
+                    $("#gameCanvas").unbind();
+                    $("infoBox").text("Game was end");
+                }
+            })
+
+            .fail(function(response) {
+
+            });
+
     }
 };
-
-
 
 //});
 

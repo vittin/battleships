@@ -27,6 +27,7 @@ var Board = {
     width: null,
     height: null,
     ctx: null,
+    size: 0,
     currentShip: {size: null, horizontally: true},
     fieldSize: 30,
     bigLineSize: 10,
@@ -38,7 +39,6 @@ var Board = {
         this.width = canvas.width;
         this.height = canvas.height;
         this.ctx = canvas.getContext("2d");
-
     },
 
     drawStatic: function(){
@@ -65,6 +65,7 @@ var Board = {
         for (var i = 0; i < 2; i++){
             //portable
             while (initialX < endsX) {
+                this.size += 1;
                 ctx.moveTo(initialX, 0);
                 ctx.lineTo(initialX, height);
                 initialX += fieldSize;
@@ -82,6 +83,7 @@ var Board = {
             initialY = 0;
             horizontalPosition = width;
         }
+        this.size = this.size/2;
         ctx.lineWidth = smallLineSize;
         ctx.stroke();
 
@@ -194,6 +196,7 @@ var Board = {
                         Ajax.putShip(x,y, Board.currentShip.size, Board.currentShip.horizontally);
                     }
                 } else {
+                    x -= Board.size;
                     Ajax.shoot(x,y);
                 }
             }
@@ -263,7 +266,7 @@ Ajax = {
                 if (!JSON.parse(data.success)){return;}
 
                 if (JSON.parse(data.hit)) {
-                    Board.drawHit(x,y, true);
+                    Board.drawHit(x+Board.size,y, true);
                     if(JSON.parse(data.dead)){
                         //todo: draw dead ship;
                         $("#infoBox").text("BUMMM!");
@@ -273,7 +276,7 @@ Ajax = {
 
                 } else {
                     console.log(x,y);
-                    Board.drawShoot(x, y, true);
+                    Board.drawShoot(x+Board.size, y, true);
                     Ajax.getOpponentShot();
                 }
             })

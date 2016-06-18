@@ -291,7 +291,7 @@ Ajax = {
             .done(function( response ){
                 if (JSON.parse(response.hit)){
                     Board.drawHit(response.x, response.y, false);
-                    this.getOpponentShot();
+                    Ajax.getOpponentShot();
                 } else {
                     Board.drawShoot(response.x, response.y, false);
                 }
@@ -306,7 +306,7 @@ Ajax = {
     isEndGame: function() {
         $.get(this.url + "endGame")
             .done(function( response ) {
-                if (JSON.parse(response.isEnd)) {
+                if (JSON.parse(response.isEndGame)) {
                     $("#gameCanvas").unbind();
                     $("infoBox").text("Game was end");
                 }

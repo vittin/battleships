@@ -285,7 +285,9 @@ Ajax = {
             .done(function( response ){
                 if (JSON.parse(response.hit)){
                     Board.drawHit(response.x, response.y, false);
-                    Ajax.getOpponentShot();
+                    setTimeout(function(){
+                        Ajax.getOpponentShot();
+                    }, 250);
                 } else {
                     Board.drawShoot(response.x, response.y, false);
                 }

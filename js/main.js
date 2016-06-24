@@ -133,15 +133,9 @@ var Board = {
         x = coordinatesToDraw[0];
         y = coordinatesToDraw[1];
 
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x+fieldSize, y+fieldSize);
-        ctx.moveTo(x, y+fieldSize);
-        ctx.lineTo(x+fieldSize, y);
-        ctx.strokeStyle = "#ff0000";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.closePath();
+        ctx.clearRect(x,y,fieldSize, fieldSize);
+        ctx.fillStyle = "#6561C2";
+        ctx.fillRect(x,y,fieldSize, fieldSize);
 
 
     },

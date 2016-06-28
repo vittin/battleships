@@ -14,7 +14,7 @@ var Events = {
     },
 
     rotate: function() {
-        $("#gameCanvas").on("contextmenu", function(e){
+        $("#gameCanvas").on("contextmenu", function(){
                 Board.currentShip.horizontally = !Board.currentShip.horizontally;
                 return false;
             }
@@ -201,6 +201,8 @@ var Board = {
 
 Ajax = {
     url: "http://localhost:8080/api/",
+    yourMove: true,
+
     init: function() {
         $.get(this.url + "initGame")
             .done(function() {
@@ -250,37 +252,42 @@ Ajax = {
     },
 
     shoot: function(x, y) {
-        $.ajax({
-            url: this.url + "shoot",
-            data: {x: x, y: y},
-            method: "POST"
-        })
-            .done(function ( data ) {
-                $("#infoBox").text("You turn");
-                if (!JSON.parse(data.success)){return;}
+        if(!Ajax.yourMove){return}
 
-                if (JSON.parse(data.hit)) {
-                    Board.drawHit(x+Board.size,y, true);
-                    if(JSON.parse(data.dead)){
-                        //todo: draw dead ship;
-                        $("#infoBox").text("BUMMM!");
+            $.ajax({
+                url: this.url + "shoot",
+                data: {x: x, y: y},
+                method: "POST"
+            })
+                .done(function ( data ) {
+                    var infobox = $("#infoBox");
+                    infobox.text("You turn");
+                    if (!JSON.parse(data.success)){return;}
 
-                        Ajax.isEndGame();
+                    if (JSON.parse(data.hit)) {
+                        Board.drawHit(x+Board.size,y, true);
+                        if(JSON.parse(data.dead)){
+                            //todo: draw dead ship;
+                            infobox.text("BUMMM!");
+
+                            Ajax.isEndGame();
+                        }
+
+                    } else {
+                        console.log(x,y);
+                        Board.drawShoot(x+Board.size, y, true);
+                        Ajax.getOpponentShot();
                     }
+                })
 
-                } else {
-                    console.log(x,y);
-                    Board.drawShoot(x+Board.size, y, true);
-                    Ajax.getOpponentShot();
-                }
-            })
-
-            .fail(function (response) {
-                console.log("Error " + response.status, response.statusText);
-            })
+                .fail(function (response) {
+                    console.log("Error " + response.status, response.statusText);
+                })
     },
 
     getOpponentShot: function() {
+        Ajax.yourMove = false;
+
         $.get(this.url + "getShoot")
             .done(function( response ){
                 if (JSON.parse(response.hit)){
@@ -290,12 +297,14 @@ Ajax = {
                     }, 250);
                 } else {
                     Board.drawShoot(response.x, response.y, false);
+                    Ajax.yourMove = true;
                 }
 
             })
 
             .fail(function( response ){
                 console.log("Error " + response.status, response.statusText);
+                Ajax.yourMove = true;
             })
     },
 
@@ -305,11 +314,12 @@ Ajax = {
                 if (JSON.parse(response.isEndGame)) {
                     $("#gameCanvas").unbind();
                     $("infoBox").text("Game was end");
+                    Ajax.yourMove = false;
                 }
             })
 
             .fail(function(response) {
-
+                console.log(response);
             });
 
     }
